@@ -1,8 +1,5 @@
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
+plugins {
+    // no plugins here – handled in settings.gradle.kts
 }
 
 val newBuildDir: Directory = rootProject.layout.buildDirectory.dir("../../build").get()
@@ -12,6 +9,7 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
+
 subprojects {
     project.evaluationDependsOn(":app")
 }

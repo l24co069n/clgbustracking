@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'firebase_options.dart';
 import 'services/auth_service.dart';
 import 'services/database_service.dart';
 import 'services/location_service.dart';
@@ -20,7 +21,17 @@ import 'utils/constants.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  
+  try {
+    print('🔥 Initializing Firebase...');
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print('✅ Firebase initialized successfully');
+  } catch (e) {
+    print('❌ Firebase initialization failed: $e');
+  }
+  
   runApp(const MyApp());
 }
 
@@ -37,7 +48,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LocationProvider()),
       ],
       child: MaterialApp(
-        title: 'College Bus Tracker',
+        title: 'upashtit2',
         theme: ThemeData(
           primarySwatch: Colors.blue,
           visualDensity: VisualDensity.adaptivePlatformDensity,
@@ -79,37 +90,54 @@ class _AuthWrapperState extends State<AuthWrapper> {
   }
 
   void _checkAuthState() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    await authProvider.checkAuthState();
+    try {
+      print('🔍 Checking authentication state...');
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      await authProvider.checkAuthState();
+      print('✅ Authentication state checked successfully');
+    } catch (e) {
+      print('❌ Error checking authentication state: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
+        print('🏗️ Building AuthWrapper - Loading: ${authProvider.isLoading}, User: ${authProvider.user?.email ?? 'null'}');
+        
         if (authProvider.isLoading) {
+          print('⏳ Showing loading screen...');
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
         if (authProvider.user == null) {
+          print('🔐 No user authenticated, showing login screen...');
           return const LoginScreen();
         }
 
         // Navigate based on user role
+        print('👤 User authenticated with role: ${authProvider.user!.role}');
         switch (authProvider.user!.role) {
           case UserRole.admin:
+            print('🎯 Navigating to Admin Dashboard');
             return const AdminDashboard();
           case UserRole.coordinator:
+            print('🎯 Navigating to Coordinator Dashboard');
             return const CoordinatorDashboard();
           case UserRole.driver:
+            print('🎯 Navigating to Driver Dashboard');
             return const DriverDashboard();
           case UserRole.teacher:
+            print('🎯 Navigating to Teacher Dashboard');
             return const TeacherDashboard();
           case UserRole.student:
+            print('🎯 Navigating to Student Dashboard');
             return const StudentDashboard();
           default:
+            print('⚠️ Unknown user role, showing login screen');
             return const LoginScreen();
         }
       },

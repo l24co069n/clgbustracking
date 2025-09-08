@@ -1,4 +1,4 @@
-name: flutter_projects
+name: upashtit2
 description: "College Bus Tracking System with Firebase"
 publish_to: 'none'
 
@@ -25,8 +25,15 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
   assets:
     - assets/images/
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/upasthit_logo.jpg"
+  min_sdk_android: 21

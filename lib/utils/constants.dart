@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 enum UserRole {
   admin,
   coordinator,
@@ -18,7 +20,7 @@ enum RouteType {
 }
 
 class AppConstants {
-  static const String appName = 'College Bus Tracker';
+  static const String appName = 'Upasthit';
   
   // Firebase Collections
   static const String usersCollection = 'users';
@@ -32,12 +34,8 @@ class AppConstants {
   static const String userRoleKey = 'user_role';
   static const String isLoggedInKey = 'is_logged_in';
   
-  // Default colleges
-  static const List<Map<String, String>> defaultColleges = [
-    {'name': 'ABC Engineering College', 'domain': 'abc.edu'},
-    {'name': 'XYZ University', 'domain': 'xyz.edu'},
-    {'name': 'Tech Institute', 'domain': 'tech.edu'},
-  ];
+  // Default colleges no longer used; colleges now loaded from Firestore
+  static const List<Map<String, String>> defaultColleges = [];
 }
 
 class AppColors {

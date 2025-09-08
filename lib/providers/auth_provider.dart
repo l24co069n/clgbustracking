@@ -13,21 +13,31 @@ class AuthProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
 
   Future<void> checkAuthState() async {
+    print('🔍 AuthProvider: Starting checkAuthState...');
     _isLoading = true;
     notifyListeners();
 
     try {
       final prefs = await SharedPreferences.getInstance();
       final isLoggedIn = prefs.getBool(AppConstants.isLoggedInKey) ?? false;
+      print('📱 AuthProvider: SharedPreferences isLoggedIn: $isLoggedIn');
+      print('🔥 AuthProvider: Firebase currentUser: ${_authService.currentUser?.email ?? 'null'}');
 
       if (isLoggedIn && _authService.currentUser != null) {
+        print('✅ AuthProvider: Getting current user data...');
         _user = await _authService.getCurrentUserData();
+        print('👤 AuthProvider: User loaded - ${_user?.email}, Role: ${_user?.role}');
+      } else {
+        print('❌ AuthProvider: No valid session found');
+        _user = null;
       }
     } catch (e) {
-      print('Error checking auth state: $e');
+      print('❌ AuthProvider: Error checking auth state: $e');
+      _user = null;
     }
 
     _isLoading = false;
+    print('🏁 AuthProvider: checkAuthState completed. User: ${_user?.email ?? 'null'}');
     notifyListeners();
   }
 
@@ -67,6 +77,7 @@ class AuthProvider with ChangeNotifier {
     required String email,
     required String password,
   }) async {
+    print('🔐 AuthProvider: Starting sign in for $email...');
     _isLoading = true;
     notifyListeners();
 
@@ -76,17 +87,23 @@ class AuthProvider with ChangeNotifier {
     );
 
     if (error == null) {
+      print('✅ AuthProvider: Sign in successful, getting user data...');
       _user = await _authService.getCurrentUserData();
+      print('👤 AuthProvider: User data loaded - ${_user?.email}, Approval: ${_user?.approvalStatus}');
       
       // Check if user is approved
       if (_user?.approvalStatus != ApprovalStatus.approved) {
+        print('⚠️ AuthProvider: User not approved, signing out...');
         await signOut();
         _isLoading = false;
         notifyListeners();
         return 'Your account is pending approval';
       }
       
+      print('💾 AuthProvider: Saving login state...');
       await _saveLoginState();
+    } else {
+      print('❌ AuthProvider: Sign in failed - $error');
     }
 
     _isLoading = false;

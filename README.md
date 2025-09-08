@@ -1,6 +1,27 @@
-# College Bus Tracking System
+# upashtit2 - College Bus Tracking System
 
 A comprehensive Flutter application with Firebase integration for tracking college buses in real-time.
+
+## 🚀 Quick Setup
+
+### Automated Setup
+Run the provided batch script:
+```bash
+.\setup_app.bat
+```
+
+### Manual Setup
+1. Get dependencies: `flutter pub get`
+2. Generate app icons: `flutter pub run flutter_launcher_icons`
+3. Run the app: `flutter run`
+
+## ✅ Pre-configured Settings
+
+- **App Name**: upashtit2
+- **Google Maps API Key**: AIzaSyAW4daIcQZHGeusF8VeqtrsStvpM1HMKjE (already configured)
+- **App Icon**: Using upasthit_logo.jpg from assets
+- **Firebase**: Debug logging enabled for troubleshooting
+- **Fixed Issue**: Counter app interface replaced with proper bus tracking interface
 
 ## Features
 
@@ -44,6 +65,26 @@ Run the following command to install dependencies:
 ```bash
 flutter pub get
 ```
+
+## 🐛 Debug Logging
+
+The app now includes comprehensive debug logging for troubleshooting:
+
+- 🔥 **Firebase Initialization**: Shows success/failure of Firebase setup
+- 🔍 **Authentication State**: Tracks user login status and session checks  
+- 👤 **User Management**: Logs user data loading and role assignments
+- 🏗️ **App Navigation**: Shows which screen is being loaded
+- 📱 **SharedPreferences**: Tracks local storage operations
+
+### Console Output Examples:
+```
+🔥 Initializing Firebase...
+✅ Firebase initialized successfully
+🔍 Checking authentication state...
+🔐 No user authenticated, showing login screen...
+```
+
+Check your IDE's debug console or device logs for detailed information.
 
 ### 4. Permissions
 The app requires location permissions for real-time tracking. These are already configured in the manifest files.

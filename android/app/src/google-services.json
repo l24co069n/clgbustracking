@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1031297058410",
+    "project_id": "clgbustracking",
+    "storage_bucket": "clgbustracking.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1031297058410:android:5d68ebd82d51cb7d39ec13",
+        "android_client_info": {
+          "package_name": "com.example.upashtit2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLuVsDGUr48o9YivhFEJF6KzsHm53xbv8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

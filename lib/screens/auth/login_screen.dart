@@ -74,7 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'College Bus Tracker',
+                        'Upasthit',
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: Colors.blue.shade800,
@@ -82,7 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Track your college bus in real-time',
+                        'College bus tracking made simple',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.blue.shade600,
                         ),

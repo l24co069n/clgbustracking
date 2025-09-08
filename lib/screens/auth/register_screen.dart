@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/constants.dart';
@@ -20,6 +21,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   final _collegeEmailController = TextEditingController();
   final _personalEmailController = TextEditingController();
+  final _coordinatorLocalController = TextEditingController();
+  final _domainController = TextEditingController();
+  final _collegeNameController = TextEditingController();
 
   UserRole _selectedRole = UserRole.student;
   String? _selectedCollege;
@@ -27,6 +31,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _usePersonalEmail = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _loadingColleges = true;
+  List<Map<String, String>> _colleges = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadColleges();
+  }
+
+  Future<void> _loadColleges() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection(AppConstants.collegesCollection)
+          .get();
+
+      final items = snapshot.docs.map((d) {
+        final data = d.data();
+        final name = (data['name'] ?? d.id).toString();
+        final domain = (data['domain'] ?? '').toString();
+        return {'name': name, 'domain': domain};
+      }).toList();
+
+      if (mounted) {
+        setState(() {
+          _colleges = items;
+          _loadingColleges = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _colleges = [];
+          _loadingColleges = false;
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -36,10 +77,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _confirmPasswordController.dispose();
     _collegeEmailController.dispose();
     _personalEmailController.dispose();
+    _coordinatorLocalController.dispose();
+    _domainController.dispose();
+    _collegeNameController.dispose();
     super.dispose();
   }
 
   void _updateEmailField() {
+    if (_selectedRole == UserRole.coordinator) {
+      final local = _coordinatorLocalController.text.trim();
+      final domain = _domainController.text.trim().replaceAll(RegExp(r'^@+'), '');
+      _selectedDomain = domain;
+      _emailController.text = (local.isNotEmpty && domain.isNotEmpty)
+          ? '$local@$domain'
+          : '';
+      return;
+    }
+
     if (_selectedCollege != null && _selectedDomain != null && !_usePersonalEmail) {
       final domain = _selectedDomain!;
       _emailController.text = '${_collegeEmailController.text}@$domain';
@@ -146,7 +200,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // College Selection (for coordinator role)
                 if (_selectedRole == UserRole.coordinator) ...[
                   CustomTextField(
-                    controller: TextEditingController(text: _selectedCollege ?? ''),
+                    controller: _collegeNameController,
                     label: 'College Name',
                     prefixIcon: Icons.school,
                     onChanged: (value) {
@@ -164,21 +218,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   
                   const SizedBox(height: 16),
                   
-                  CustomTextField(
-                    controller: TextEditingController(text: _selectedDomain ?? ''),
-                    label: 'College Email Domain (e.g., college.edu)',
-                    prefixIcon: Icons.domain,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedDomain = value;
-                      });
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter college domain';
-                      }
-                      return null;
-                    },
+                  // Coordinator email local-part and domain side-by-side
+                  Row(
+                    children: [
+                      Expanded(
+                        child: CustomTextField(
+                          controller: _coordinatorLocalController,
+                          label: 'Email (before @)',
+                          prefixIcon: Icons.alternate_email,
+                          onChanged: (value) => setState(_updateEmailField),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Enter email ID';
+                            }
+                            if (value.contains('@') || value.contains(' ')) {
+                              return 'Do not include @ or spaces';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: CustomTextField(
+                          controller: _domainController,
+                          label: 'Domain (e.g., example.edu)',
+                          prefixIcon: Icons.domain,
+                          onChanged: (value) => setState(_updateEmailField),
+                          validator: (value) {
+                            final v = (value ?? '').trim();
+                            if (v.isEmpty) return 'Enter domain';
+                            final clean = v.replaceAll(RegExp(r'^@+'), '');
+                            final domainRegex = RegExp(r'^[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
+                            if (!domainRegex.hasMatch(clean)) {
+                              return 'Invalid domain';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ] else ...[
                   // College Selection for other roles
@@ -189,21 +268,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       prefixIcon: Icon(Icons.school),
                       border: OutlineInputBorder(),
                     ),
-                    items: AppConstants.defaultColleges.map((college) {
-                      return DropdownMenuItem(
-                        value: college['name'],
-                        child: Text(college['name']!),
-                      );
-                    }).toList(),
+                    items: _loadingColleges
+                        ? []
+                        : _colleges.map((college) {
+                            return DropdownMenuItem(
+                              value: college['name'],
+                              child: Text(college['name']!),
+                            );
+                          }).toList(),
                     onChanged: (value) {
                       setState(() {
                         _selectedCollege = value;
-                        _selectedDomain = AppConstants.defaultColleges
-                            .firstWhere((college) => college['name'] == value)['domain'];
+                        _selectedDomain = _colleges
+                            .firstWhere((college) => college['name'] == value, orElse: () => {'domain': ''})['domain'];
                         _updateEmailField();
                       });
                     },
                     validator: (value) {
+                      if (_loadingColleges) {
+                        return 'Loading colleges...';
+                      }
                       if (value == null || value.isEmpty) {
                         return 'Please select a college';
                       }
@@ -229,7 +313,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 16),
                 
                 // Email Fields
-                if (!_usePersonalEmail && _selectedRole != UserRole.coordinator) ...[
+                if (_selectedRole == UserRole.coordinator) ...[
+                  CustomTextField(
+                    controller: _emailController,
+                    label: 'Composed Email',
+                    keyboardType: TextInputType.emailAddress,
+                    prefixIcon: Icons.email,
+                    readOnly: true,
+                    validator: (value) {
+                      final email = _emailController.text.trim();
+                      if (email.isEmpty) return 'Enter email and domain';
+                      final ok = RegExp(r'^[\w\.-]+@([\w-]+\.)+[A-Za-z]{2,}$').hasMatch(email);
+                      if (!ok) return 'Email is badly formatted';
+                      return null;
+                    },
+                  ),
+                ] else if (!_usePersonalEmail) ...[
                   CustomTextField(
                     controller: _collegeEmailController,
                     label: 'College Email (without @${_selectedDomain ?? 'domain'})',
@@ -242,12 +341,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       return null;
                     },
                   ),
-                ] else if (_usePersonalEmail || _selectedRole == UserRole.coordinator) ...[
+                ] else ...[
                   CustomTextField(
                     controller: _personalEmailController,
-                    label: _selectedRole == UserRole.coordinator 
-                        ? 'College Email' 
-                        : 'Personal Email',
+                    label: 'Personal Email',
                     keyboardType: TextInputType.emailAddress,
                     prefixIcon: Icons.email,
                     onChanged: (value) => _updateEmailField(),

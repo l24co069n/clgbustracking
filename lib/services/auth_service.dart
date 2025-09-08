@@ -46,6 +46,10 @@ class AuthService {
       );
 
       if (credential.user != null) {
+        // Send verification email
+        try {
+          await credential.user!.sendEmailVerification();
+        } catch (_) {}
         // Determine approval status
         ApprovalStatus approvalStatus = ApprovalStatus.approved;
         if (role == UserRole.coordinator && personalEmail != null) {
@@ -68,10 +72,16 @@ class AuthService {
           createdAt: DateTime.now(),
         );
 
-        await _firestore
-            .collection(AppConstants.usersCollection)
-            .doc(credential.user!.uid)
-            .set(userModel.toFirestore());
+        try {
+          await _firestore
+              .collection(AppConstants.usersCollection)
+              .doc(credential.user!.uid)
+              .set(userModel.toFirestore());
+        } catch (e) {
+          // Roll back auth user to avoid orphaned account
+          try { await credential.user!.delete(); } catch (_) {}
+          return 'Registration failed while saving profile. Please try again.';
+        }
 
         return null; // Success
       }
@@ -92,6 +102,10 @@ class AuthService {
         email: email,
         password: password,
       );
+      if (_auth.currentUser != null && _auth.currentUser!.emailVerified == false) {
+        await _auth.signOut();
+        return 'Please verify your email before logging in. Check your inbox.';
+      }
       return null; // Success
     } on FirebaseAuthException catch (e) {
       return e.message;
